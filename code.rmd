@@ -1,1 +1,5 @@
-#code for project
+# code for project
+
+# notes on the project 
+
+# Rsearch Quesiton 
