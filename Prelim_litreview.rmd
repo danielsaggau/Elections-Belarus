@@ -4,8 +4,9 @@
 
 # Rsearch Question 
 
+RQ:
 
-# Potential Research Papers 
+# Potential Research Papers to read to get started
 
 Potocki, R. (2011). Belarus: A tale of two elections. Journal of Democracy, 22(3), 49-63.
 
