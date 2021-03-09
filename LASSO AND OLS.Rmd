@@ -21,6 +21,9 @@ library(broom)
 library(glmnet)
 ```
 
+
+# LASSO Regression for Feature Selection
+
 ```{r}
 data <- read.csv("~/Elections-Belarus/train_pls1")
 
@@ -55,10 +58,45 @@ ind = which(coef_lasso!=0)
 ind
 ```
 
+# OLS Regression with selected features
+
 ```{r}
 model = lm(lukashenko_share ~ number_of_voters_who_took_part_in_voting_at_the_place_of_residence  + Dmitriev + Lukashenko + Tikhanovskaya +number_of_votes_againts_all_candidates + latitude + longitude, data = data)
 
 summary(model)
 
+```
+
+# Preprocessing the data into a 
+
+
+```{r}
+
+```
+
+
+# LDA
+
+```{r}
+library(lda)
+library(topicmodels)
+library(tidytext)
+
+doc.lengths <- rowSums(as.matrix(DocumentTermMatrix(corpus)))
+dtm <- DocumentTermMatrix(corpus[doc.lengths > 0])
+
+#########################################################################################################
+
+doc.lengths <- rowSums(as.matrix(DocumentTermMatrix(ctweets)))
+dtm <- DocumentTermMatrix(ctweets[doc.lengths > 0])
+
+LDA_employ <- LDA(dtm, k =5,method = "VEM", cotrol = list(seed=1234))
+employ_topics <- tidy(LDA_employ, matrix ="beta")
+
+ap_top_terms <- employ_topics %>%
+  group_by(topic) %>%
+  top_n(10, beta) %>%
+  ungroup() %>%
+  arrange(topic, -beta)
 ```
 
