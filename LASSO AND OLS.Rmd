@@ -1,0 +1,51 @@
+---
+title: "code_elections"
+author: ""
+date: "3/7/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Installing the packages 
+
+
+```{r}
+library(readxl)
+library(MASS)
+library(glmnet)
+library(tidyverse)
+library(broom)
+library(glmnet)
+```
+
+```{r}
+data = train_pls1
+n = nrow(data)
+p = ncol(data) -1
+
+data = data %>% 
+  filter_all(all_vars(!is.infinite(.)))
+
+model_lasso = glmnet(x = as.matrix(data[, - (p+1)]), y = data$lukashenko_share, alpha =1)
+plot(model_lasso)
+```
+
+
+```{r}
+lambda_lasso = cv.glmnet(x = as.matrix(data[,-(p+1)]),
+                         y = data$lukashenko_share, alpha =1)$lambda.min
+
+coef_lasso <- model_lasso$beta[, which(model_lasso$lambda == lambda_lasso)]
+coef_lasso
+
+# LASSO-Regularisierung:
+library(plotmo)
+par(mfrow = c(1, 1))
+# LASSO-Regularisierung:
+plot_glmnet(x = model_lasso, label = TRUE, xvar = "lambda")
+title(main = "LASSO", line = 3)
+```
+
