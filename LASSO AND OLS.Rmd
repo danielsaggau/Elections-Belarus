@@ -22,7 +22,8 @@ library(glmnet)
 ```
 
 ```{r}
-data = train_pls1
+data <- read.csv("~/Elections-Belarus/train_pls1")
+
 n = nrow(data)
 p = ncol(data) -1
 
@@ -47,5 +48,17 @@ par(mfrow = c(1, 1))
 # LASSO-Regularisierung:
 plot_glmnet(x = model_lasso, label = TRUE, xvar = "lambda")
 title(main = "LASSO", line = 3)
+```
+
+```{r}
+ind = which(coef_lasso!=0)
+ind
+```
+
+```{r}
+model = lm(lukashenko_share ~ number_of_voters_who_took_part_in_voting_at_the_place_of_residence  + Dmitriev + Lukashenko + Tikhanovskaya +number_of_votes_againts_all_candidates + latitude + longitude, data = data)
+
+summary(model)
+
 ```
 
