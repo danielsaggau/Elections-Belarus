@@ -67,6 +67,39 @@ summary(model)
 
 ```
 
+# RF Model (#TODO)
+
+```{r}
+library(tidyverse)
+data <- read.csv("~/Elections-Belarus/train_pls1")
+
+data = data %>% 
+  filter_all(all_vars(!is.infinite(.)))
+
+colnames(data) = c("total", "received", "tookpart","earlyvoting", "residence", "electday", "dmitriev", "kano", "lukashenko","tik","cher", "dropped","against_all", "held_on", "invalid","comission","spoiled","unused","long","lat","doc","army","educ", "science","profunion","econ","lukashenko_share")
+
+data = data[-(7:12)]
+
+n = nrow(data)
+p = ncol(data) -1
+
+model = lm(lukashenko_share ~ total + tookpart + received + earlyvoting +residence+ electday  +against_all + held_on + invalid + comission + spoiled + unused + profunion + science + army +educ + lat + long, data = data)
+
+summary(model)
+
+cor(data)
+model_lasso = glmnet(x = as.matrix(data[, - (p+1)]), y = data$total, alpha =1)
+
+lambda_lasso = cv.glmnet(x = as.matrix(data[,-(p+1)]),
+                         y = data$total, alpha =1)$lambda.min
+
+coef_lasso <- model_lasso$beta[, which(model_lasso$lambda == lambda_lasso)]
+coef_lasso
+
+
+```
+
+
 # Mergning Data with the Life in Transition Survey (#TOD0)
 
 ```{r}
