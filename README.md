@@ -18,7 +18,7 @@ Based on this corpus we can then build our topic models using various sampling m
 ## Random Forest 
 
 
-# RStudio: Lasso Regression, LDA(#TODO) , Mapping (#TODO)
+# RStudio: Lasso Prediction / Regression, LDA(#TODO) , Mapping (#TODO)
 
 We undertake the Lasso Regression R. 
 Further we again briefly explore the given data and the respective features.
