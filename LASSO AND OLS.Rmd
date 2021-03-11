@@ -33,6 +33,9 @@ We use a split of 0.66.
 # We set a seed for reproducability
 set.seed(123)
 library(tidyverse)
+library(skimr)
+library(mlr3)
+library(glmnet)
 
 # Importing the dataset
 data <- read.csv("~/Elections-Belarus/train_pls1")
@@ -41,11 +44,11 @@ data <- read.csv("~/Elections-Belarus/train_pls1")
 data = data %>% 
   filter_all(all_vars(!is.infinite(.)))
 
-colnames(data) = c("total", "received", "tookpart","earlyvoting", "residence", "electday", "dmitriev", "kano", "lukashenko","tik","cher", "dropped","against_all", "held_on", "invalid","comission","spoiled","unused","long","lat","doc","army","educ", "science","profunion","econ","lukashenko_share")
+colnames(data) = c("X","total", "received", "tookpart","earlyvoting", "residence", "electday", "dmitriev", "kano", "lukashenko","tik","cher", "dropped","against_all", "held_on", "invalid","commission","spoiled","unused","lat","long","doc","army","educ", "science","profunion","econ","lukashenko_share")
 
 # Remove columns we dont need 
-data = data[-(7:12)]
-data = data[-22]
+data = data[-(8:12)]
+n <- nrow(data)
 # Split the data
 ind_train = sample(x = 1:n, size = ceiling(0.8 * n))
 set_train = data[ind_train,]
@@ -62,7 +65,9 @@ set_test = data[ind_test,]
 # Brief Summary statistics and exploration
 
 ```{r}
-model = lm(lukashenko_share ~ total + tookpart + received + earlyvoting + residence + electday + against_all + held_on + invalid + comission + spoiled + unused + profunion + science + army +educ + lat + long, data = data)
+
+
+model = lm(lukashenko_share ~ total + tookpart + received + earlyvoting + residence + electday + against_all + held_on + invalid + commission + spoiled + unused + profunion + science + army +educ + lat + long, data = data)
 
 summary(model)
 
@@ -71,6 +76,9 @@ summary(data$lukashenko_share)
 summary(set_train$lukashenko_share)
 summary(set_test$lukashenko_share)
 cor(set_train)
+skim(data)
+
+distplot(data$lukashenko_share)
 ```
 
 
@@ -92,8 +100,7 @@ lambda <- seq(from = 0.01, to = 1, by = 0.01)
 cv_lasso <- rep(x = 0, length.out = length(lambda))
 
 #Predict lasso 
-predict_lasso <- predict.glmnet(object = glmnet(as.matrix(set_train_cv[, -(p + 1)]),
-set_train_cv$lukashenko_share, alpha = 1),
+predict_lasso <- predict.glmnet(object = glmnet(as.matrix(set_train_cv[, -(p + 1)]), set_train_cv$lukashenko_share, alpha = 1),
 newx = as.matrix(set_test_cv[, -(p + 1)]),
 s = lambda[i])
 # Berechnung der Fehlerquadratsummen (SSE):
@@ -154,15 +161,13 @@ n = nrow(data)
 p = ncol(data) -1
 
 cor(data)
-model_lasso = glmnet(x = as.matrix(data[, - (p+1)]), y = data$total, alpha =1)
+model_lasso = glmnet(x = as.matrix(data[, - (p+1)]), y = data$lukashenko_share, alpha =1)
 
 lambda_lasso = cv.glmnet(x = as.matrix(data[,-(p+1)]),
                          y = data$total, alpha =1)$lambda.min
 
 coef_lasso <- model_lasso$beta[, which(model_lasso$lambda == lambda_lasso)]
 coef_lasso
-
-
 ```
 
 
