@@ -60,7 +60,7 @@ set_test = data[ind_test,]
 # Brief Summary statistics and exploration
 
 ```{r}
-model = lm(lukashenko_share ~ total + tookpart + received + earlyvoting + residence + electday + against_all + held_on + invalid + commission + spoiled + unused + profunion + science + army +educ + lat + long, data = data)
+model = lm(lukashenko_share ~ total + tookpart + received + earlyvoting + residence + electday + against_all + held_on + invalid + commission + spoiled + unused + profunion + science + army + educ + lat + long, data = data)
 summary(model)
 
 # Naive model with all variables 
@@ -77,24 +77,83 @@ skim(data)
 ```
 ```{r}
 # Number of observations in row
-n_train <- nrow(set_train)
-p = ncol(set_train) -1
+n_train <- nrow(data)
+p = ncol(data) -1
 
 model_lasso = glmnet(x = as.matrix(set_train[, - (p+1)]), y = set_train$lukashenko_share, alpha =1)
-plot(model_lasso)
-
-
 lambda_lasso = cv.glmnet(x = as.matrix(set_train[,-(p+1)]),
                          y = set_train$lukashenko_share, alpha =1)$lambda.min
 
+# Plot log lambda
+plot_glmnet(x = model_lasso, label = TRUE, xvar = "lambda")
+title(main = "LASSO", line = 3)
+```
+
+```{r}
+y_train = set_train$lukashenko_share
+predict_train = matrix(data =0, nrow= nrow(set_train), ncol=2)
+
+predict_train[, 1] = predict(object = model_naive, 
+                           newdata = set_train[,-(p+1)])
+predict_train[,2] = predict.glmnet(object = model_lasso, 
+                                  newx = as.matrix(set_train[,-(p+1)]),
+                                  s = lambda_lasso)
+
+colnames(predict_train) =c("Naive Model", "Lasso Model")
+```
+
+
+
+```{r}
+MSE_train = rep(x=0, length.out =2) 
+for (i in 1:2){
+  MSE_train[i] = mean((y_train-predict_train[,i])^2)
+}
+MSE_train
+```
+
+# Examining MSE for different predictions 
+
+```{r}
+# Number of observations in row
+n <- nrow(data)
+p = ncol(data) -1
+
+model_lasso = glmnet(x = as.matrix(set_test[, - (p+1)]), y = set_test$lukashenko_share, alpha =1)
+lambda_lasso = cv.glmnet(x = as.matrix(set_test[,-(p+1)]), y = set_test$lukashenko_share, alpha =1)$lambda.min
+
+y_test = set_test$lukashenko_share
+predict_test = matrix(data =0, nrow= nrow(set_test), ncol=2)
+
+predict_test[, 1] = predict(object = model_naive, newdata = set_test[,-(p+1)])
+predict_test[,2] = predict.glmnet(object = model_lasso,  newx = as.matrix(set_test[,-(p+1)]),
+                                  s = lambda_lasso)
+
+colnames(predict_test) =c("Naive Model", "Lasso Model")
+summary(predict_test)
+
+MSE_test = rep(x=0, length.out =2) 
+for (i in 1:2){
+  MSE_test[i] = mean((y_test-predict_test[,i])^2)
+}
+MSE_test
+```
+
+
+# 
+
+```{r}
 coef_lasso <- model_lasso$beta[, which(model_lasso$lambda == lambda_lasso)]
 coef_lasso
 
 ind = which(coef_lasso!=0)
 ind
+```
 
+# Plugging this into an OLS framework 
+
+```{r}
 model = lm(lukashenko_share ~ earlyvoting  + residence + electday + against_all + commission + long + lat + army + profunion + econ, data = set_test)
-
 summary(model)
 ```
 
@@ -102,31 +161,29 @@ summary(model)
 
 ```{r}
 # Sequence for lambda :
+n_train <- nrow(set_train)
 lambda <- seq(from = 0.01, to = 1, by = 0.01)
+
 # instantiate cv criteria 
 cv_lasso <- rep(x = 0, length.out = length(lambda))
+
 #Predict lasso 
 predict_lasso <- predict.glmnet(object = glmnet(as.matrix(set_train_cv[, -(p + 1)]), set_train_cv$lukashenko_share, alpha = 1),
 newx = as.matrix(set_test_cv[, -(p + 1)]),
 s = lambda[i])
-# Berechnung der Fehlerquadratsummen (SSE):
-cv_lasso[i] <- cv_lasso[i] + sum((set_test_cv$ - predict_lasso)^2)
-# Berechnung der MSEs:
-cv_lasso <- cv_lasso / n_train
+
+
+
+
 ```
+
+
 
 ```{r}
 # Lambda score via cross validation and normal lambda score
 lambda_lasso_cv <- lambda[which(cv_lasso == min(cv_lasso))]
 lambda_lasso_cv
 lambda_lasso
-```
-
-
-```{r}
-# Plot log lambda
-plot_glmnet(x = model_lasso, label = TRUE, xvar = "lambda")
-title(main = "LASSO", line = 3)
 ```
 
 # OLS Regression with selected features
