@@ -75,14 +75,25 @@ hist(set_test$lukashenko_share)
 # cor(set_train)
 skim(data)
 ```
+
+```{r}
+library(corrplot)
+correl = cor(set_train[-1])
+corrplot(correl)
+```
+
+
 ```{r}
 # Number of observations in row
-n_train <- nrow(data)
+n <- nrow(data)
 p = ncol(data) -1
 
 model_lasso = glmnet(x = as.matrix(set_train[, - (p+1)]), y = set_train$lukashenko_share, alpha =1)
-lambda_lasso = cv.glmnet(x = as.matrix(set_train[,-(p+1)]),
-                         y = set_train$lukashenko_share, alpha =1)$lambda.min
+
+cv<-cv.glmnet(as.matrix(set_train[-(p+1)]), set_train$lukashenko_share, nfolds = 900) 
+plot(cv)
+
+lambda_lasso = cv.glmnet(x = as.matrix(set_train[,-(p+1)]),y = set_train$lukashenko_share, alpha =1)$lambda.min
 
 # Plot log lambda
 plot_glmnet(x = model_lasso, label = TRUE, xvar = "lambda")
@@ -94,7 +105,7 @@ y_train = set_train$lukashenko_share
 predict_train = matrix(data =0, nrow= nrow(set_train), ncol=2)
 
 predict_train[, 1] = predict(object = model_naive, 
-                           newdata = set_train[,-(p+1)])
+                           newdata = set_train)
 predict_train[,2] = predict.glmnet(object = model_lasso, 
                                   newx = as.matrix(set_train[,-(p+1)]),
                                   s = lambda_lasso)
@@ -109,129 +120,40 @@ MSE_train = rep(x=0, length.out =2)
 for (i in 1:2){
   MSE_train[i] = mean((y_train-predict_train[,i])^2)
 }
+names(MSE_train) = c("Naive Model", "Lasso Model")
 MSE_train
 ```
 
 # Examining MSE for different predictions 
 
 ```{r}
-# Number of observations in row
-n <- nrow(data)
-p = ncol(data) -1
-
-model_lasso = glmnet(x = as.matrix(set_test[, - (p+1)]), y = set_test$lukashenko_share, alpha =1)
-lambda_lasso = cv.glmnet(x = as.matrix(set_test[,-(p+1)]), y = set_test$lukashenko_share, alpha =1)$lambda.min
-
 y_test = set_test$lukashenko_share
 predict_test = matrix(data =0, nrow= nrow(set_test), ncol=2)
 
-predict_test[, 1] = predict(object = model_naive, newdata = set_test[,-(p+1)])
+predict_test[, 1] = predict(object = model_naive, newdata = set_test)
 predict_test[,2] = predict.glmnet(object = model_lasso,  newx = as.matrix(set_test[,-(p+1)]),
                                   s = lambda_lasso)
 
 colnames(predict_test) =c("Naive Model", "Lasso Model")
-summary(predict_test)
 
 MSE_test = rep(x=0, length.out =2) 
 for (i in 1:2){
   MSE_test[i] = mean((y_test-predict_test[,i])^2)
 }
+names(MSE_test) = c("Naive Model", "Lasso Model")
 MSE_test
 ```
-
-
-# 
 
 ```{r}
 coef_lasso <- model_lasso$beta[, which(model_lasso$lambda == lambda_lasso)]
 coef_lasso
-
 ind = which(coef_lasso!=0)
 ind
 ```
 
-# Plugging this into an OLS framework 
+# OLS Regression with selected features
 
 ```{r}
 model = lm(lukashenko_share ~ earlyvoting  + residence + electday + against_all + commission + long + lat + army + profunion + econ, data = set_test)
 summary(model)
 ```
-
-# Cross Validation (#TODO)
-
-```{r}
-# Sequence for lambda :
-n_train <- nrow(set_train)
-lambda <- seq(from = 0.01, to = 1, by = 0.01)
-
-# instantiate cv criteria 
-cv_lasso <- rep(x = 0, length.out = length(lambda))
-
-#Predict lasso 
-predict_lasso <- predict.glmnet(object = glmnet(as.matrix(set_train_cv[, -(p + 1)]), set_train_cv$lukashenko_share, alpha = 1),
-newx = as.matrix(set_test_cv[, -(p + 1)]),
-s = lambda[i])
-
-
-
-
-```
-
-
-
-```{r}
-# Lambda score via cross validation and normal lambda score
-lambda_lasso_cv <- lambda[which(cv_lasso == min(cv_lasso))]
-lambda_lasso_cv
-lambda_lasso
-```
-
-# OLS Regression with selected features
-
-# RF Model (#TODO)
-
-```{r}
-coef_lasso <- model_lasso$beta[, which(model_lasso$lambda == lambda_lasso)]
-coef_lasso
-```
-
-
-# Mergning Data with the Life in Transition Survey (#TOD0)
-
-```{r}
-
-```
-
-# Preprocessing the data into a text corpus (#TOD0)
-
-```{r}
-
-
-```
-
-
-# LDA (#TOD0)
-
-```{r}
-library(lda)
-library(topicmodels)
-library(tidytext)
-
-doc.lengths <- rowSums(as.matrix(DocumentTermMatrix(corpus)))
-dtm <- DocumentTermMatrix(corpus[doc.lengths > 0])
-
-#####################################################################################
-
-doc.lengths <- rowSums(as.matrix(DocumentTermMatrix(ctweets)))
-dtm <- DocumentTermMatrix(ctweets[doc.lengths > 0])
-
-LDA_employ <- LDA(dtm, k =5,method = "VEM", cotrol = list(seed=1234))
-employ_topics <- tidy(LDA_employ, matrix ="beta")
-
-ap_top_terms <- employ_topics %>%
-  group_by(topic) %>%
-  top_n(10, beta) %>%
-  ungroup() %>%
-  arrange(topic, -beta)
-```
-
