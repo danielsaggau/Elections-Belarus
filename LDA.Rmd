@@ -1,0 +1,46 @@
+---
+title: "lda"
+author: "Daniel Saggau"
+date: "3/11/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Preprocessing the data into a text corpus (#TOD0)
+
+Here we need to merge all the columns and create a giant text corpus. 
+
+
+```{r}
+
+
+```
+
+
+# LDA (#TOD0)
+
+```{r}
+library(lda)
+library(topicmodels)
+library(tidytext)
+
+doc.lengths <- rowSums(as.matrix(DocumentTermMatrix(corpus)))
+dtm <- DocumentTermMatrix(corpus[doc.lengths > 0])
+
+#####################################################################################
+
+doc.lengths <- rowSums(as.matrix(DocumentTermMatrix(ctweets)))
+dtm <- DocumentTermMatrix(ctweets[doc.lengths > 0])
+
+LDA_employ <- LDA(dtm, k =5,method = "VEM", cotrol = list(seed=1234))
+employ_topics <- tidy(LDA_employ, matrix ="beta")
+
+ap_top_terms <- employ_topics %>%
+  group_by(topic) %>%
+  top_n(10, beta) %>%
+  ungroup() %>%
+  arrange(topic, -beta)
+```

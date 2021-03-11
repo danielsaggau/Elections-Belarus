@@ -49,15 +49,22 @@ colnames(data) = c("X","total", "received", "tookpart","earlyvoting", "residence
 
 # Remove columns we dont need 
 data = data[-(8:12)]
+
+# Determining number of row and columns
+p = ncol(data) -1
 n <- nrow(data)
+
 # Split the data
-ind_train = sample(x = 1:n, size = ceiling(0.8 * n))
+ind_train = sample(x = 1:n, size = ceiling(0.66 * n))
 set_train = data[ind_train,]
 ind_test = setdiff(x=1:n, ind_train)
 set_test = data[ind_test,] 
 ```
 
 # Brief Summary statistics and exploration
+
+Next we can undertake a brief exploratory data analysis. 
+
 
 ```{r}
 model = lm(lukashenko_share ~ total + tookpart + received + earlyvoting + residence + electday + against_all + held_on + invalid + commission + spoiled + unused + profunion + science + army + educ + lat + long, data = data)
@@ -76,21 +83,20 @@ hist(set_test$lukashenko_share)
 skim(data)
 ```
 
+Next, we can also look at the correlations between the features. 
+
+
 ```{r}
 library(corrplot)
-correl = cor(set_train[-1])
+correl = cor(data[-1])
 corrplot(correl)
 ```
 
 
 ```{r}
-# Number of observations in row
-n <- nrow(data)
-p = ncol(data) -1
-
 model_lasso = glmnet(x = as.matrix(set_train[, - (p+1)]), y = set_train$lukashenko_share, alpha =1)
 
-cv<-cv.glmnet(as.matrix(set_train[-(p+1)]), set_train$lukashenko_share, nfolds = 900) 
+cv<-cv.glmnet(as.matrix(set_train[-(p+1)]), set_train$lukashenko_share, nfolds = 300) 
 plot(cv)
 
 lambda_lasso = cv.glmnet(x = as.matrix(set_train[,-(p+1)]),y = set_train$lukashenko_share, alpha =1)$lambda.min
@@ -100,12 +106,14 @@ plot_glmnet(x = model_lasso, label = TRUE, xvar = "lambda")
 title(main = "LASSO", line = 3)
 ```
 
+We can first look at how our models perform on our training data.
+Here we are comparing a random forest and a lasso model. 
+
 ```{r}
 y_train = set_train$lukashenko_share
 predict_train = matrix(data =0, nrow= nrow(set_train), ncol=2)
 
-predict_train[, 1] = predict(object = model_naive, 
-                           newdata = set_train)
+predict_train[, 1] = predict(object = model_naive, newdata = set_train[, -(p + 1)])
 predict_train[,2] = predict.glmnet(object = model_lasso, 
                                   newx = as.matrix(set_train[,-(p+1)]),
                                   s = lambda_lasso)
@@ -113,7 +121,9 @@ predict_train[,2] = predict.glmnet(object = model_lasso,
 colnames(predict_train) =c("Naive Model", "Lasso Model")
 ```
 
+# Examining MSE for different predictions 
 
+After generating our predictions, we need to calculate our mean squared errors (MSE).
 
 ```{r}
 MSE_train = rep(x=0, length.out =2) 
@@ -124,13 +134,16 @@ names(MSE_train) = c("Naive Model", "Lasso Model")
 MSE_train
 ```
 
-# Examining MSE for different predictions 
+
+Predicting on our training data, we can see that the OLS model without regularization performs better than the Lasso model, although they are somewhat similar. 
+Subsequently, we can look at how our model performs when dealing with new data. 
+Therefore, we use the test set and again predict our naive and our lasso model.
 
 ```{r}
 y_test = set_test$lukashenko_share
 predict_test = matrix(data =0, nrow= nrow(set_test), ncol=2)
 
-predict_test[, 1] = predict(object = model_naive, newdata = set_test)
+predict_test[, 1] = predict(object = model_naive, newdata = set_test[, -(p + 1)])
 predict_test[,2] = predict.glmnet(object = model_lasso,  newx = as.matrix(set_test[,-(p+1)]),
                                   s = lambda_lasso)
 
@@ -144,6 +157,16 @@ names(MSE_test) = c("Naive Model", "Lasso Model")
 MSE_test
 ```
 
+# OLS Regression with selected features
+
+Here we can see a very different performance. 
+The Lasso model performs substantially better then the OLS model.
+Therefore, using this method has led to better predictive performance. 
+Lastly, we can also use the lasso specification for a OLS model, trained on test data to ensure that we have no incorrect standard errors.
+This is a pivotal concern within in economics, because we need correct standard errors to interpret our coefficients and ensure causality. 
+
+As a first step we can look at the coefficients in the lasso model:
+
 ```{r}
 coef_lasso <- model_lasso$beta[, which(model_lasso$lambda == lambda_lasso)]
 coef_lasso
@@ -151,9 +174,15 @@ ind = which(coef_lasso!=0)
 ind
 ```
 
-# OLS Regression with selected features
+The advantage of the lasso method is that we induce sparsity.
+Here we can see that various features turn to 0.
+One could also argue that due to correlation between some features, explanatory or variance was ascribed to either the one or the other variable. 
+We can see that the variables that were more correlated (see correlation plot above) frequently scored 0 here. 
+Now we can specify a model with the relevant coefficients, and run the model on the test data. 
 
 ```{r}
-model = lm(lukashenko_share ~ earlyvoting  + residence + electday + against_all + commission + long + lat + army + profunion + econ, data = set_test)
+model = lm(lukashenko_share ~  earlyvoting  + residence + electday + dropped + against_all + commission + spoiled +  long + army + educ + science + profunion + econ, data = set_test)
 summary(model)
 ```
+Here we can see that on the test data some variables still remain insignificant. 
+This could be due to the effect that the effect was very weak and barely significant in the other model, too.

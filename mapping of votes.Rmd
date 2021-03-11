@@ -21,7 +21,8 @@ library(sf)
 ```{r}
 votes <- read.csv("~/Downloads/BelarusElections/belarus1994-qgisNew.csv",header=T)
 geo = st_read("~/Downloads/BelarusElections 4/gis files for BLR and poland/BLR_Adm/BLR_adm2.shp")
-
+dist = st_read("~/Downloads/BelarusElections 4/gis files for BLR and poland/BLR_Adm/BLR_adm1.shp")
+road = st_read("~/Downloads/BelarusElections 4/gis files for BLR and poland/BLR_rds/BLR_roads.shp")
 library(tidyverse)
 
 votes_sf = votes %>%
@@ -34,20 +35,26 @@ votes_sf = votes %>%
 
 ggsave(filename = "map.png",plot = map, width = 20,
        height = 10,path="images", device = "png", dpi = 150)
+
+bela <- read.csv("~/Downloads/BelarusElections 3/belarus-qgis.csv", header=T)
+ggplot(bela, aes (x = latitude, y= longitude)) + geom_point()
+
+bela = bela %>%
+  na.omit()
 ```
 
 # Geospatial map (TODO)
 
 ```{r}
-ggplot() + geom_sf(data = geo, mapping = aes(geometry = geometry))
-library(ggplot2)
-bela <- read.csv("~/Downloads/BelarusElections 3/belarus-qgis.csv", header=T)
-ggplot(bela, aes (x = latitude, y= longitude)) + geom_point()
+ggplot()+ geom_sf(data = geo, mapping = aes(geometry = geometry)) + 
+  geom_sf(data= dist, aes(geometry = geometry)) + 
+  geom_sf(data= road, aes(geometry = geometry))
 
-ggplot() +
-geom_sf(data = geo, mapping = aes(geometry = geometry)) +
-  geom_point(data = votes,
-             aes(x= longitude_wgs84,
-                 y= latitude_wgs84, color = area_name_belarusian)) 
+```
+
+
+
+
+
 
 
