@@ -24,32 +24,87 @@ library(glmnet)
 
 # LASSO Regression for Feature Selection
 
+# Splitting the data 
+
+In the first step, we split the data into training and test set. 
+We use a split of 0.66.
+
 ```{r}
+# We set a seed for reproducability
 set.seed(123)
-ind_train = sample(x = 1:n, size = ceiling(0.66 * n))
+library(tidyverse)
+
+# Importing the dataset
+data <- read.csv("~/Elections-Belarus/train_pls1")
+
+# Remove inf
+data = data %>% 
+  filter_all(all_vars(!is.infinite(.)))
+
+colnames(data) = c("total", "received", "tookpart","earlyvoting", "residence", "electday", "dmitriev", "kano", "lukashenko","tik","cher", "dropped","against_all", "held_on", "invalid","comission","spoiled","unused","long","lat","doc","army","educ", "science","profunion","econ","lukashenko_share")
+
+# Remove columns we dont need 
+data = data[-(7:12)]
+data = data[-22]
+# Split the data
+ind_train = sample(x = 1:n, size = ceiling(0.8 * n))
 set_train = data[ind_train,]
 ind_test = setdiff(x=1:n, ind_train)
 set_test = data[ind_test,] 
+```
 
-# Anzahl der Beobachtungen im Trainingsdatensatz:
+# Relabeling and cleaning up  
+
+```{r}
+
+```
+
+# Brief Summary statistics and exploration
+
+```{r}
+model = lm(lukashenko_share ~ total + tookpart + received + earlyvoting + residence + electday + against_all + held_on + invalid + comission + spoiled + unused + profunion + science + army +educ + lat + long, data = data)
+
+summary(model)
+
+hist(data$lukashenko_share)
+summary(data$lukashenko_share)
+summary(set_train$lukashenko_share)
+summary(set_test$lukashenko_share)
+cor(set_train)
+```
+
+
+# Cross Validation 
+
+```{r}
+# Number of observations in row
 n_train <- nrow(set_train)
-# Sequenz an lambda-Werten f¨ur Grid Search:
+
+# Remove missing and inf
+data = data %>% 
+  filter_all(all_vars(!is.infinite(.)))
+p = ncol(data) -1
+
+# Sequence for lambda :
 lambda <- seq(from = 0.01, to = 1, by = 0.01)
-# Initialisierung der CV-Kriterien
+
+# instantiate cv criteria 
 cv_lasso <- rep(x = 0, length.out = length(lambda))
-  
+
+#Predict lasso 
 predict_lasso <- predict.glmnet(object = glmnet(as.matrix(set_train_cv[, -(p + 1)]),
-set_train_cv$medv, alpha = 1),
+set_train_cv$lukashenko_share, alpha = 1),
 newx = as.matrix(set_test_cv[, -(p + 1)]),
 s = lambda[i])
 # Berechnung der Fehlerquadratsummen (SSE):
-cv_lasso[i] <- cv_lasso[i] + sum((set_test_cv$medv - predict_lasso)^2)
+cv_lasso[i] <- cv_lasso[i] + sum((set_test_cv$ - predict_lasso)^2)
 # Berechnung der MSEs:
 cv_lasso <- cv_lasso / n_train
 ```
 
+
 ```{r}
-# Lambda-Regularisierung:
+# Lambda score via cross validation and normal lambda score
 lambda_lasso_cv <- lambda[which(cv_lasso == min(cv_lasso))]
 lambda_lasso_cv
 lambda_lasso
@@ -58,14 +113,6 @@ lambda_lasso
 
 
 ```{r}
-data <- read.csv("~/Elections-Belarus/train_pls1")
-
-n = nrow(data)
-p = ncol(data) -1
-
-data = data %>% 
-  filter_all(all_vars(!is.infinite(.)))
-
 model_lasso = glmnet(x = as.matrix(data[, - (p+1)]), y = data$lukashenko_share, alpha =1)
 plot(model_lasso)
 ```
@@ -103,22 +150,8 @@ summary(model)
 # RF Model (#TODO)
 
 ```{r}
-library(tidyverse)
-data <- read.csv("~/Elections-Belarus/train_pls1")
-
-data = data %>% 
-  filter_all(all_vars(!is.infinite(.)))
-
-colnames(data) = c("total", "received", "tookpart","earlyvoting", "residence", "electday", "dmitriev", "kano", "lukashenko","tik","cher", "dropped","against_all", "held_on", "invalid","comission","spoiled","unused","long","lat","doc","army","educ", "science","profunion","econ","lukashenko_share")
-
-data = data[-(7:12)]
-
 n = nrow(data)
 p = ncol(data) -1
-
-model = lm(lukashenko_share ~ total + tookpart + received + earlyvoting + residence + electday + against_all + held_on + invalid + comission + spoiled + unused + profunion + science + army +educ + lat + long, data = data)
-
-summary(model)
 
 cor(data)
 model_lasso = glmnet(x = as.matrix(data[, - (p+1)]), y = data$total, alpha =1)
