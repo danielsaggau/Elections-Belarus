@@ -16,7 +16,33 @@ Here we need to merge all the columns and create a giant text corpus.
 
 ```{r}
 
+cleaner <- function(text){
+  text <- tolower(text)
+  text <- gsub("rt", "", text)
+  text <- gsub("@\\w+", "", text)
+  text <- gsub("[[:punct:]]", "", text)
+  text <- gsub("http\\w+", "", text)
+  text <- gsub("amp", " ", text)
+  text <- gsub("[ |\t]{2,}", "", text)
+  text <- gsub("^ ", "", text)
+  text <- gsub(" $", "", text)
+  text <- gsub(" +", " ", text)
+  text <- gsub("=", " ", text)
+  text <- gsub('<.*>', '', enc2native(text))
+  text <- unique(text)
+  return(text)
+}
 
+polish <- function(text){
+  text <- VCorpus(VectorSource(text))
+  text <- tm_map(text, removeWords, stopwords("english"))
+  text <- tm_map(text, removeNumbers)
+  text <- tm_map(text, stemDocument)
+}
+
+text = data$text 
+text <- cleaner(text)
+corpus <- polish(text)
 ```
 
 
@@ -32,8 +58,8 @@ dtm <- DocumentTermMatrix(corpus[doc.lengths > 0])
 
 #####################################################################################
 
-doc.lengths <- rowSums(as.matrix(DocumentTermMatrix(ctweets)))
-dtm <- DocumentTermMatrix(ctweets[doc.lengths > 0])
+doc.lengths <- rowSums(as.matrix(DocumentTermMatrix(text)))
+dtm <- DocumentTermMatrix(text[doc.lengths > 0])
 
 LDA_employ <- LDA(dtm, k =5,method = "VEM", cotrol = list(seed=1234))
 employ_topics <- tidy(LDA_employ, matrix ="beta")

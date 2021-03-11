@@ -169,9 +169,7 @@ As a first step we can look at the coefficients in the lasso model:
 
 ```{r}
 coef_lasso <- model_lasso$beta[, which(model_lasso$lambda == lambda_lasso)]
-coef_lasso
-ind = which(coef_lasso!=0)
-ind
+which(coef_lasso!=0)
 ```
 
 The advantage of the lasso method is that we induce sparsity.
