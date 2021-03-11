@@ -1,0 +1,44 @@
+---
+title: "mapping of votes"
+author: "Daniel Saggau"
+date: "3/11/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Installing Packages 
+
+```{r}
+library(ggplot2)
+library(sf)
+```
+
+# Fetching Data 
+
+```{r}
+votes <- read.csv("~/Downloads/BelarusElections/belarus1994-qgisNew.csv",header=T)
+geo = st_read("~/Downloads/BelarusElections 4/gis files for BLR and poland/BLR_Adm/BLR_adm2.shp")
+
+library(tidyverse)
+
+votes_sf = votes %>%
+  st_as_sf(coords= c("latitude_wgs84", "longitude_wgs84"), crs=  4326) %>%
+  summarise(geometry= st_combine(geometry)) %>%
+  st_cast("POLYGON")
+
+#ggplot() + geom_sf(data = geo, mapping = aes(geometry = geometry)) +
+#  geom_sf(data = votes_sf, mapping = (aes(geometry = geometry)))
+
+ggsave(filename = "map.png",plot = map, width = 20,
+       height = 10,path="images", device = "png", dpi = 150)
+```
+
+# Geospatial map 
+
+```{r}
+ggplot() + geom_sf(data = geo, mapping = aes(geometry = geometry))
+```
+

@@ -184,6 +184,8 @@ coef_lasso
 library(ggplot2)
 bela <- read.csv("~/Downloads/BelarusElections 3/belarus-qgis.csv", header=T)
 ggplot(bela, aes (x = latitude, y= longitude)) + geom_point()
+
+
 ```
 
 
