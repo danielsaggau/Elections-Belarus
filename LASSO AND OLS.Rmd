@@ -36,6 +36,7 @@ library(tidyverse)
 library(skimr)
 library(mlr3)
 library(glmnet)
+library(plotmo)
 
 # Importing the dataset
 data <- read.csv("~/Elections-Belarus/train_pls1")
@@ -56,49 +57,56 @@ ind_test = setdiff(x=1:n, ind_train)
 set_test = data[ind_test,] 
 ```
 
-# Relabeling and cleaning up  
-
-```{r}
-
-```
-
 # Brief Summary statistics and exploration
 
 ```{r}
-
-
 model = lm(lukashenko_share ~ total + tookpart + received + earlyvoting + residence + electday + against_all + held_on + invalid + commission + spoiled + unused + profunion + science + army +educ + lat + long, data = data)
-
 summary(model)
 
+# Naive model with all variables 
+model_naive = lm(lukashenko_share~., data = set_train)
+summary(model_naive)
+
+
 hist(data$lukashenko_share)
-summary(data$lukashenko_share)
-summary(set_train$lukashenko_share)
-summary(set_test$lukashenko_share)
-cor(set_train)
+par(1,3)
+hist(data$lukashenko_share)
+hist(set_train$lukashenko_share)
+hist(set_test$lukashenko_share)
+
+# cor(set_train)
 skim(data)
-
-distplot(data$lukashenko_share)
 ```
-
-
-# Cross Validation 
-
 ```{r}
 # Number of observations in row
 n_train <- nrow(set_train)
+p = ncol(set_train) -1
 
-# Remove missing and inf
-data = data %>% 
-  filter_all(all_vars(!is.infinite(.)))
-p = ncol(data) -1
+model_lasso = glmnet(x = as.matrix(set_train[, - (p+1)]), y = set_train$lukashenko_share, alpha =1)
+plot(model_lasso)
 
+
+lambda_lasso = cv.glmnet(x = as.matrix(set_train[,-(p+1)]),
+                         y = set_train$lukashenko_share, alpha =1)$lambda.min
+
+coef_lasso <- model_lasso$beta[, which(model_lasso$lambda == lambda_lasso)]
+coef_lasso
+
+ind = which(coef_lasso!=0)
+ind
+
+model = lm(lukashenko_share ~ earlyvoting  + residence + electday + against_all + commission + long + lat + army + profunion + econ, data = set_test)
+
+summary(model)
+```
+
+# Cross Validation (#TODO)
+
+```{r}
 # Sequence for lambda :
 lambda <- seq(from = 0.01, to = 1, by = 0.01)
-
 # instantiate cv criteria 
 cv_lasso <- rep(x = 0, length.out = length(lambda))
-
 #Predict lasso 
 predict_lasso <- predict.glmnet(object = glmnet(as.matrix(set_train_cv[, -(p + 1)]), set_train_cv$lukashenko_share, alpha = 1),
 newx = as.matrix(set_test_cv[, -(p + 1)]),
@@ -109,7 +117,6 @@ cv_lasso[i] <- cv_lasso[i] + sum((set_test_cv$ - predict_lasso)^2)
 cv_lasso <- cv_lasso / n_train
 ```
 
-
 ```{r}
 # Lambda score via cross validation and normal lambda score
 lambda_lasso_cv <- lambda[which(cv_lasso == min(cv_lasso))]
@@ -118,41 +125,13 @@ lambda_lasso
 ```
 
 
-
 ```{r}
-model_lasso = glmnet(x = as.matrix(data[, - (p+1)]), y = data$lukashenko_share, alpha =1)
-plot(model_lasso)
-```
-
-
-```{r}
-lambda_lasso = cv.glmnet(x = as.matrix(data[,-(p+1)]),
-                         y = data$lukashenko_share, alpha =1)$lambda.min
-
-coef_lasso <- model_lasso$beta[, which(model_lasso$lambda == lambda_lasso)]
-coef_lasso
-
-# LASSO-Regularisierung:
-library(plotmo)
-par(mfrow = c(1, 1))
-# LASSO-Regularisierung:
+# Plot log lambda
 plot_glmnet(x = model_lasso, label = TRUE, xvar = "lambda")
 title(main = "LASSO", line = 3)
 ```
 
-```{r}
-ind = which(coef_lasso!=0)
-ind
-```
-
 # OLS Regression with selected features
-
-```{r}
-model = lm(lukashenko_share ~ number_of_voters_who_took_part_in_voting_at_the_place_of_residence  + Dmitriev + Lukashenko + Tikhanovskaya +number_of_votes_againts_all_candidates + latitude + longitude, data = data)
-
-summary(model)
-
-```
 
 # RF Model (#TODO)
 
@@ -177,20 +156,7 @@ coef_lasso
 
 ```
 
-
-# Geospatial Map  (#TOD0)
-
-```{r}
-library(ggplot2)
-bela <- read.csv("~/Downloads/BelarusElections 3/belarus-qgis.csv", header=T)
-ggplot(bela, aes (x = latitude, y= longitude)) + geom_point()
-
-
-```
-
-
 # Preprocessing the data into a text corpus (#TOD0)
-
 
 ```{r}
 

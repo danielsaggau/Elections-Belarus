@@ -36,9 +36,18 @@ ggsave(filename = "map.png",plot = map, width = 20,
        height = 10,path="images", device = "png", dpi = 150)
 ```
 
-# Geospatial map 
+# Geospatial map (TODO)
 
 ```{r}
 ggplot() + geom_sf(data = geo, mapping = aes(geometry = geometry))
-```
+library(ggplot2)
+bela <- read.csv("~/Downloads/BelarusElections 3/belarus-qgis.csv", header=T)
+ggplot(bela, aes (x = latitude, y= longitude)) + geom_point()
+
+ggplot() +
+geom_sf(data = geo, mapping = aes(geometry = geometry)) +
+  geom_point(data = votes,
+             aes(x= longitude_wgs84,
+                 y= latitude_wgs84, color = area_name_belarusian)) 
+
 
