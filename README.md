@@ -47,7 +47,7 @@ On the test data our lasso model outperforms the naive model and gets a lower MS
 ## OLS Regression (LASSO)
 
 Based on the Lasso Regression, the following variables were selected and then modelled on the test set (seed 123). 
-Significance levels are indicated in brackets (*** - 0.001, ** - 0.01, * - 0.05, .- 0.01).
+Significance levels are indicated in brackets (*** - 0.001, ** - 0.01, * - 0.05, .- 0.1).
 
 * Early Voting (***)
 * Residence (***)
