@@ -25,6 +25,39 @@ library(glmnet)
 # LASSO Regression for Feature Selection
 
 ```{r}
+set.seed(123)
+ind_train = sample(x = 1:n, size = ceiling(0.66 * n))
+set_train = data[ind_train,]
+ind_test = setdiff(x=1:n, ind_train)
+set_test = data[ind_test,] 
+
+# Anzahl der Beobachtungen im Trainingsdatensatz:
+n_train <- nrow(set_train)
+# Sequenz an lambda-Werten f¨ur Grid Search:
+lambda <- seq(from = 0.01, to = 1, by = 0.01)
+# Initialisierung der CV-Kriterien
+cv_lasso <- rep(x = 0, length.out = length(lambda))
+  
+predict_lasso <- predict.glmnet(object = glmnet(as.matrix(set_train_cv[, -(p + 1)]),
+set_train_cv$medv, alpha = 1),
+newx = as.matrix(set_test_cv[, -(p + 1)]),
+s = lambda[i])
+# Berechnung der Fehlerquadratsummen (SSE):
+cv_lasso[i] <- cv_lasso[i] + sum((set_test_cv$medv - predict_lasso)^2)
+# Berechnung der MSEs:
+cv_lasso <- cv_lasso / n_train
+```
+
+```{r}
+# Lambda-Regularisierung:
+lambda_lasso_cv <- lambda[which(cv_lasso == min(cv_lasso))]
+lambda_lasso_cv
+lambda_lasso
+```
+
+
+
+```{r}
 data <- read.csv("~/Elections-Belarus/train_pls1")
 
 n = nrow(data)
@@ -83,7 +116,7 @@ data = data[-(7:12)]
 n = nrow(data)
 p = ncol(data) -1
 
-model = lm(lukashenko_share ~ total + tookpart + received + earlyvoting +residence+ electday  +against_all + held_on + invalid + comission + spoiled + unused + profunion + science + army +educ + lat + long, data = data)
+model = lm(lukashenko_share ~ total + tookpart + received + earlyvoting + residence + electday + against_all + held_on + invalid + comission + spoiled + unused + profunion + science + army +educ + lat + long, data = data)
 
 summary(model)
 
