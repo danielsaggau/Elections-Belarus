@@ -39,16 +39,18 @@ library(glmnet)
 library(plotmo)
 
 # Importing the dataset
-data <- read.csv("~/Elections-Belarus/train_pls1")
+#data <- read.csv("~/Elections-Belarus/train_pls1")
+data <- read_excel("df_merge_n.xlsx", sheet = "Sheet1")
 
 # Remove inf
 data = data %>% 
   filter_all(all_vars(!is.infinite(.)))
 
-colnames(data) = c("X","total", "received", "tookpart","earlyvoting", "residence", "electday", "dmitriev", "kano", "lukashenko","tik","cher", "dropped","against_all", "held_on", "invalid","commission","spoiled","unused","lat","long","doc","army","educ", "science","profunion","econ","lukashenko_share")
-
 # Remove columns we dont need 
-data = data[-(8:12)]
+data = data[-(14:18)]
+data = data[-(21:25)]
+
+colnames(data)[8:20] = c("total","received", "took_part", "took_part_early","took_part_residence","electionday", "vote_dropped_out","against_all","against_onecandiate", "invalid", "commission", "spoiled", " unused")
 
 # Determining number of row and columns
 p = ncol(data) -1
@@ -184,3 +186,85 @@ summary(model)
 ```
 Here we can see that on the test data some variables still remain insignificant. 
 This could be due to the effect that the effect was very weak and barely significant in the other model, too.
+
+```{r}
+PCA = prcomp(data, scale. = TRUE,center = TRUE)
+summary(PCA)
+screeplot(PCA, npcs =8, type = "lines")
+??screeplot
+```
+
+
+
+
+```{r}
+library(tidyverse)
+library(lda)
+library(topicmodels)
+library(tidytext)
+library(tm)
+
+#data = unite(lits3_gis,col = "text", country:b2c, sep =" ")
+#data <- read_csv("~/Downloads/BelarusElections/belarus-qgis.csv")
+data <- read_excel("df_merge_n.xlsx", sheet = "Sheet1")
+data = unite(data, col = "text", commission_code:economics, sep =" ")
+
+data = data %>%
+  select("text")
+
+cleaner <- function(text){
+  text <- tolower(text)
+  text <- gsub("rt", "", text)
+  text <- gsub("@\\w+", "", text)
+  text <- gsub("[[:punct:]]", "", text)
+  text <- gsub("http\\w+", "", text)
+  text <- gsub("amp", " ", text)
+  text <- gsub("[ |\t]{2,}", "", text)
+  text <- gsub("^ ", "", text)
+  text <- gsub(" $", "", text)
+  text <- gsub(" +", " ", text)
+  text <- gsub("=", " ", text)
+  text <- gsub('<.*>', '', enc2native(text))
+  text <- unique(text)
+  return(text)
+}
+#####################################################################################
+
+polish <- function(text){
+  text <- VCorpus(VectorSource(text))
+  text <- tm_map(text, removeWords, stopwords("english"))
+  text <- tm_map(text, removeNumbers)
+  text <- tm_map(text, stemDocument)
+}
+text = data$text 
+text <- cleaner(text)
+corpus <- polish(text)
+
+doc.lengths <- rowSums(as.matrix(DocumentTermMatrix(corpus)))
+dtm <- DocumentTermMatrix(corpus[doc.lengths > 0])
+
+#####################################################################################
+
+#LDA <- LDA(dtm, k =3,method = "VEM", cotrol = list(seed=1234))
+LDA <- LDA(x=dtm, k=2, method="Gibbs",control=list(alpha=1, delta=0.1, seed=10005))
+
+topics <- tidy(LDA, matrix ="beta")
+
+ap_top_terms <- topics %>%
+  group_by(topic) %>%
+  top_n(10, beta) %>%
+  ungroup() %>%
+  arrange(topic, -beta)
+
+#####################################################################################
+
+ap_top_terms %>%
+  mutate(term = reorder_within(term, beta, topic)) %>%
+  ggplot(aes(term, beta, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  coord_flip() +
+  scale_x_reordered()
+```
+```
+

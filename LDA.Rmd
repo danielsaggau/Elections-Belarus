@@ -15,20 +15,22 @@ Here we need to merge all the columns and create a giant text corpus.
 
 ```{r}
 library(tidyverse)
-
-data = unite(lits3_gis,col = "text", country:b2c, sep =" ")
-
-data = data %>%
-  select("text")
-view(text)
-```
-
-
-```{r}
 library(lda)
 library(topicmodels)
 library(tidytext)
 library(tm)
+
+#data = unite(lits3_gis,col = "text", country:b2c, sep =" ")
+#data <- read_csv("~/Downloads/BelarusElections/belarus-qgis.csv")
+data <- read_excel("df_merge_n.xlsx", sheet = "Sheet1")
+data = unite(data, col = "text", commission_code:economics, sep =" ")
+
+data = data %>%
+  select("text")
+```
+
+
+```{r}
 cleaner <- function(text){
   text <- tolower(text)
   text <- gsub("rt", "", text)
@@ -45,6 +47,7 @@ cleaner <- function(text){
   text <- unique(text)
   return(text)
 }
+#####################################################################################
 
 polish <- function(text){
   text <- VCorpus(VectorSource(text))
@@ -52,6 +55,8 @@ polish <- function(text){
   text <- tm_map(text, removeNumbers)
   text <- tm_map(text, stemDocument)
 }
+
+#####################################################################################
 
 text = data$text 
 text <- cleaner(text)
@@ -62,13 +67,14 @@ corpus <- polish(text)
 # LDA (#TOD0)
 
 ```{r}
-
 doc.lengths <- rowSums(as.matrix(DocumentTermMatrix(corpus)))
 dtm <- DocumentTermMatrix(corpus[doc.lengths > 0])
 
 #####################################################################################
 
-LDA <- LDA(dtm, k =5,method = "VEM", cotrol = list(seed=1234))
+#LDA <- LDA(dtm, k =3,method = "VEM", cotrol = list(seed=1234))
+LDA <- LDA(x=dtm, k=2, method="Gibbs",control=list(alpha=1, delta=0.1, seed=10005))
+
 topics <- tidy(LDA, matrix ="beta")
 
 ap_top_terms <- topics %>%
@@ -76,13 +82,84 @@ ap_top_terms <- topics %>%
   top_n(10, beta) %>%
   ungroup() %>%
   arrange(topic, -beta)
+
+#####################################################################################
+
+ap_top_terms %>%
+  mutate(term = reorder_within(term, beta, topic)) %>%
+  ggplot(aes(term, beta, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  coord_flip() +
+  scale_x_reordered()
+```
+
+# Google Translate 
+
+```{r}
+install.packages("translateR")
+library(translateR)
+
+google_data = translate(ap_top_terms, content.field = "term",
+                                google.api.key = '59eab4b079ff0e193b6158f33b312a893d85d761',
+                                source.lang = 'uk',target.lang = 'en')
+google.dataset.out
+getGoogleLanguages()
+
+google.vector.out <- translate(content.vec = ap_top_terms$term, google.api.key = '59eab4b079ff0e193b6158f33b312a893d85d761', source.lang = "ru", target.lang = "uk")
 ```
 
 
+# Network Analysis
+
+```{r}
+trigram <- data %>%
+  unnest_tokens(trigram, text, token = "ngrams", n = 3)
+
+trigram %>%
+count(trigram, sort = TRUE)
+```
+
+```{r}
+library(ggraph)
+library(igraph)
+set.seed(2017)
+
+trigrams_separated <- trigram %>%
+  separate(trigram, c("word1", "word2"), sep = " ")
+
+trigrams_filtered <- trigrams_separated %>%
+  filter(!word1 %in% c("")) %>%
+  filter(!word2 %in% stop_words$word)
+
+# new bigram counts:
+trigram_counts <- trigrams_filtered %>% 
+  count(word1, word2, sort = TRUE)
+trigram_counts
+trigram_graph <- trigram_counts %>%
+  filter(n > 800) %>%
+  graph_from_data_frame()
+
+ggraph(trigram_graph, layout = "fr") +
+  geom_edge_link() +
+  geom_node_point() +
+  geom_node_text(aes(label = name), vjust = 1, hjust = 1)
 
 
+trigrams_filtered %>%
+    filter(!(word1 == "na")) %>%
+  filter(!(word2 == "na")) %>%
+  count(word1, sort = TRUE)
 
+```
+```{r}
+a <- grid::arrow(type = "closed", length = unit(.15, "inches"))
 
-
-
+ggraph(trigram_graph, layout = "fr") +
+  geom_edge_link(aes(edge_alpha = n), show.legend = FALSE,
+                 arrow = a, end_cap = circle(.07, 'inches')) +
+  geom_node_point(color = "lightblue", size = 5) +
+  geom_node_text(aes(label = name), vjust = 1, hjust = 1) +
+  theme_void()
+```
 
