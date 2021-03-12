@@ -13,9 +13,22 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Here we need to merge all the columns and create a giant text corpus. 
 
+```{r}
+library(tidyverse)
+
+data = unite(lits3_gis,col = "text", country:b2c, sep =" ")
+
+data = data %>%
+  select("text")
+view(text)
+```
+
 
 ```{r}
-
+library(lda)
+library(topicmodels)
+library(tidytext)
+library(tm)
 cleaner <- function(text){
   text <- tolower(text)
   text <- gsub("rt", "", text)
@@ -49,24 +62,27 @@ corpus <- polish(text)
 # LDA (#TOD0)
 
 ```{r}
-library(lda)
-library(topicmodels)
-library(tidytext)
 
 doc.lengths <- rowSums(as.matrix(DocumentTermMatrix(corpus)))
 dtm <- DocumentTermMatrix(corpus[doc.lengths > 0])
 
 #####################################################################################
 
-doc.lengths <- rowSums(as.matrix(DocumentTermMatrix(text)))
-dtm <- DocumentTermMatrix(text[doc.lengths > 0])
+LDA <- LDA(dtm, k =5,method = "VEM", cotrol = list(seed=1234))
+topics <- tidy(LDA, matrix ="beta")
 
-LDA_employ <- LDA(dtm, k =5,method = "VEM", cotrol = list(seed=1234))
-employ_topics <- tidy(LDA_employ, matrix ="beta")
-
-ap_top_terms <- employ_topics %>%
+ap_top_terms <- topics %>%
   group_by(topic) %>%
   top_n(10, beta) %>%
   ungroup() %>%
   arrange(topic, -beta)
 ```
+
+
+
+
+
+
+
+
+
