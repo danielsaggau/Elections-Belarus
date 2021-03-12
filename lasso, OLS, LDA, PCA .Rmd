@@ -31,7 +31,7 @@ We use a split of 0.66.
 
 ```{r}
 # We set a seed for reproducability
-set.seed(123)
+set.seed(144)
 library(tidyverse)
 library(skimr)
 library(mlr3)
@@ -40,17 +40,17 @@ library(plotmo)
 
 # Importing the dataset
 #data <- read.csv("~/Elections-Belarus/train_pls1")
-data <- read_excel("df_merge_n.xlsx", sheet = "Sheet1")
+data <- read_excel("df_merge3.xlsx", sheet = "Sheet1")
 
 # Remove inf
 data = data %>% 
   filter_all(all_vars(!is.infinite(.)))
 
 # Remove columns we dont need 
-data = data[-(14:18)]
-data = data[-(21:25)]
+data = data[-(8:12)]
+#data = data[-(21:25)]
 
-colnames(data)[8:20] = c("total","received", "took_part", "took_part_early","took_part_residence","electionday", "vote_dropped_out","against_all","against_onecandiate", "invalid", "commission", "spoiled", " unused")
+colnames(data)[2:14] = c("total","received", "took_part", "earlyvoting","residence","electionday", "vote_dropped_out","against_all","against_onecandiate", "invalid", "commission", "spoiled", " unused")
 
 # Determining number of row and columns
 p = ncol(data) -1
@@ -69,9 +69,6 @@ Next we can undertake a brief exploratory data analysis.
 
 
 ```{r}
-model = lm(lukashenko_share ~ total + tookpart + received + earlyvoting + residence + electday + against_all + held_on + invalid + commission + spoiled + unused + profunion + science + army + educ + lat + long, data = data)
-summary(model)
-
 # Naive model with all variables 
 model_naive = lm(lukashenko_share~., data = set_train)
 summary(model_naive)
@@ -81,7 +78,6 @@ hist(data$lukashenko_share)
 hist(set_train$lukashenko_share)
 hist(set_test$lukashenko_share)
 
-# cor(set_train)
 skim(data)
 ```
 
@@ -96,9 +92,10 @@ corrplot(correl)
 
 
 ```{r}
+
 model_lasso = glmnet(x = as.matrix(set_train[, - (p+1)]), y = set_train$lukashenko_share, alpha =1)
 
-cv<-cv.glmnet(as.matrix(set_train[-(p+1)]), set_train$lukashenko_share, nfolds = 300) 
+cv<-cv.glmnet(as.matrix(set_train[-(p+1)]), set_train$lukashenko_share, nfolds = 3) 
 plot(cv)
 
 lambda_lasso = cv.glmnet(x = as.matrix(set_train[,-(p+1)]),y = set_train$lukashenko_share, alpha =1)$lambda.min
@@ -188,12 +185,27 @@ Here we can see that on the test data some variables still remain insignificant.
 This could be due to the effect that the effect was very weak and barely significant in the other model, too.
 
 ```{r}
-PCA = prcomp(data, scale. = TRUE,center = TRUE)
+library(ggfortify)
+library(devtools)
+install_github("vqv/ggbiplot")
+library(ggbiplot)
+
 summary(PCA)
 screeplot(PCA, npcs =8, type = "lines")
-??screeplot
+install.packages("ggfortify")
+install.packages("")
+autoplot(PCA, colour = "lukashenko_share", loadings =T,loading.label =T,loadings.label.size = 20)
 ```
 
+# Experimental plots (# TODO: Region variable restructure)
+
+```{r}
+PCA = prcomp(data[,19:31], scale. = TRUE,center = TRUE)
+summary(PCA)
+ggbiplot(PCA,ellipse=TRUE, labels = rownames(data), groups= data$economics)
+```
+
+# LDA 
 
 
 

@@ -23,6 +23,9 @@ votes <- read.csv("~/Downloads/BelarusElections/belarus1994-qgisNew.csv",header=
 geo = st_read("~/Downloads/BelarusElections 4/gis files for BLR and poland/BLR_Adm/BLR_adm2.shp")
 dist = st_read("~/Downloads/BelarusElections 4/gis files for BLR and poland/BLR_Adm/BLR_adm1.shp")
 road = st_read("~/Downloads/BelarusElections 4/gis files for BLR and poland/BLR_rds/BLR_roads.shp")
+bela <- read.csv("~/Downloads/BelarusElections 3/belarus-qgis.csv", header=T)
+data <- read_excel("df_merge_n.xlsx", sheet = "Sheet1")
+
 library(tidyverse)
 
 votes_sf = votes %>%
@@ -33,11 +36,11 @@ votes_sf = votes %>%
 #ggplot() + geom_sf(data = geo, mapping = aes(geometry = geometry)) +
 #  geom_sf(data = votes_sf, mapping = (aes(geometry = geometry)))
 
-ggsave(filename = "map.png",plot = map, width = 20,
-       height = 10,path="images", device = "png", dpi = 150)
+#ggsave(filename = "map.png",plot = map, width = 20,
+#       height = 10,path="images", device = "png", dpi = 150)
 
-bela <- read.csv("~/Downloads/BelarusElections 3/belarus-qgis.csv", header=T)
-ggplot(bela, aes (x = latitude, y= longitude)) + geom_point()
+
+ggplot(data, aes (x = latitude, y= longitude)) + geom_point()
 
 bela = bela %>%
   na.omit()
@@ -46,15 +49,26 @@ bela = bela %>%
 # Geospatial map (TODO)
 
 ```{r}
-ggplot()+ geom_sf(data = geo, mapping = aes(geometry = geometry)) + 
+ plot = ggplot()+ geom_sf(data = geo, mapping = aes(geometry = geometry)) + 
   geom_sf(data= dist, aes(geometry = geometry)) + 
-  geom_sf(data= road, aes(geometry = geometry))
+  geom_sf(data= road, aes(geometry = geometry)) 
 
+map = plot + geom_point(data = bela, mapping = aes(fill = "region")) + coord_sf()
+map
 ```
 
 
 
 
 
+```{r}
+library(maps)
+counties <- st_as_sf(map("county", plot = FALSE, fill = TRUE))
+counties <- subset(counties, grepl("belarus", counties$ID))
+counties$area <- as.numeric(st_area(counties))
+head(counties)
+
+merge()
+```
 
 
