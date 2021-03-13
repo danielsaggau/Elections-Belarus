@@ -11,14 +11,16 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Installing the packages 
 
-
 ```{r}
 library(readxl)
 library(MASS)
-library(glmnet)
 library(tidyverse)
 library(broom)
+library(skimr)
+library(mlr3)
 library(glmnet)
+library(plotmo)
+set.seed(144) # We set a seed for reproducability
 ```
 
 
@@ -30,27 +32,17 @@ In the first step, we split the data into training and test set.
 We use a split of 0.66.
 
 ```{r}
-# We set a seed for reproducability
-set.seed(144)
-library(tidyverse)
-library(skimr)
-library(mlr3)
-library(glmnet)
-library(plotmo)
-
 # Importing the dataset
-#data <- read.csv("~/Elections-Belarus/train_pls1")
 data <- read_excel("df_merge3.xlsx", sheet = "Sheet1")
+library(skimr)
 
-# Remove inf
-data = data %>% 
-  filter_all(all_vars(!is.infinite(.)))
 
 # Remove columns we dont need 
 data = data[-(8:12)]
-#data = data[-(21:25)]
 
-colnames(data)[2:14] = c("total","received", "took_part", "earlyvoting","residence","electionday", "vote_dropped_out","against_all","against_onecandiate", "invalid", "commission", "spoiled", " unused")
+#data = data[-(21:25)]
+#data = data[-(1)]
+#data = data[-(30)]
 
 # Determining number of row and columns
 p = ncol(data) -1
@@ -63,6 +55,18 @@ ind_test = setdiff(x=1:n, ind_train)
 set_test = data[ind_test,] 
 ```
 
+## Renaming the columns
+
+
+
+```{r}
+# Set up some column names
+
+#colnames(data)[2:14] = c("total","received", "took_part", "earlyvoting","residence","electionday", "vote_dropped_out","against_all","against_onecandiate", "invalid", "commission", "spoiled", " unused")
+```
+
+
+
 # Brief Summary statistics and exploration
 
 Next we can undertake a brief exploratory data analysis. 
@@ -72,12 +76,10 @@ Next we can undertake a brief exploratory data analysis.
 # Naive model with all variables 
 model_naive = lm(lukashenko_share~., data = set_train)
 summary(model_naive)
-
 par(mfrow = c(3, 1))
 hist(data$lukashenko_share) 
 hist(set_train$lukashenko_share)
 hist(set_test$lukashenko_share)
-
 skim(data)
 ```
 
@@ -197,7 +199,7 @@ install.packages("")
 autoplot(PCA, colour = "lukashenko_share", loadings =T,loading.label =T,loadings.label.size = 20)
 ```
 
-# Experimental plots (# TODO: Region variable restructure)
+# Experimental plots (#TODO: Region variable restructure)
 
 ```{r}
 PCA = prcomp(data[,19:31], scale. = TRUE,center = TRUE)
@@ -206,8 +208,6 @@ ggbiplot(PCA,ellipse=TRUE, labels = rownames(data), groups= data$economics)
 ```
 
 # LDA 
-
-
 
 ```{r}
 library(tidyverse)
@@ -278,5 +278,62 @@ ap_top_terms %>%
   coord_flip() +
   scale_x_reordered()
 ```
+
+# Variable Importance (#TODO)
+
+```{r}
+set.seed(123)
+library(ranger)
+library(vip) # Link: https://koalaverse.github.io/vip/articles/vip.html
+rfo <- ranger(lukashenko_share ~ ., data = data, importance = "permutation")
+rfo
+vi_rfo <- rfo$variable.importance
+vi_rfo
+barplot(vi_rfo, horiz = TRUE, las = 1)
+
+vip(rfo, width = 0.5, aesthetics = list(fill = "green3"))
+
+
+coef(coef_lasso)
+backward <- step(model_lasso, direction = "backward", trace = 0)
+vip(model_lasso, width = 0.5, aesthetics = list(fill = "green3"))
+```
+
+# TODO
+
+```{r}
+library(caret)
+varImp(x= , y= data$lukashenko_share, lambda = lambda_lasso, )
+```
+
+
+```{r}
+int.i <- vint(
+  object = trn.gbm,                    # fitted model object
+  feature_names = paste0("x.", 1:10),  # features for which to compute pairwise interactions statistics
+  n.trees = best.iter,                 # needed if object is of class "gbm"
+  parallel = TRUE
+)
+```
+
+```{r}
+# Plot Friedman's H-statistics
+p1 <- ggplot(int.h[1:10, ], aes(reorder(x, y), y)) +
+  geom_col(width = 0.75) +
+  labs(x = "", y = "Interaction strength", title = "Friedman's H-statistic") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1)) +
+  theme_light() +
+  coord_flip()
+
+# Plot PDP-based interaction statistics
+p2 <- ggplot(int.i[1:10, ], aes(reorder(Variables, Interaction), Interaction)) +
+  geom_col(width = 0.75) +
+  labs(x = "", y = "Interaction strength", title = "Partial dependence") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1)) +
+  theme_light() +
+  coord_flip()
+
+# Display plots side by side
+grid.arrange(p1, p2, ncol = 2)
 ```
 
