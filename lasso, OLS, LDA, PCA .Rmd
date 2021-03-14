@@ -100,6 +100,8 @@ model_lasso = glmnet(x = as.matrix(set_train[, - (p+1)]), y = set_train$lukashen
 cv<-cv.glmnet(as.matrix(set_train[-(p+1)]), set_train$lukashenko_share, nfolds = 3) 
 plot(cv)
 
+??cv.glmnet()
+
 lambda_lasso = cv.glmnet(x = as.matrix(set_train[,-(p+1)]),y = set_train$lukashenko_share, alpha =1)$lambda.min
 
 # Plot log lambda
@@ -192,6 +194,10 @@ library(devtools)
 install_github("vqv/ggbiplot")
 library(ggbiplot)
 
+PCA = prcomp(data[,19:31], scale. = TRUE,center = TRUE)
+summary(PCA)
+ggbiplot(PCA,ellipse=TRUE, labels = rownames(data), groups= data$economics)
+
 summary(PCA)
 screeplot(PCA, npcs =8, type = "lines")
 install.packages("ggfortify")
@@ -202,9 +208,7 @@ autoplot(PCA, colour = "lukashenko_share", loadings =T,loading.label =T,loadings
 # Experimental plots (#TODO: Region variable restructure)
 
 ```{r}
-PCA = prcomp(data[,19:31], scale. = TRUE,center = TRUE)
-summary(PCA)
-ggbiplot(PCA,ellipse=TRUE, labels = rownames(data), groups= data$economics)
+
 ```
 
 # LDA 
@@ -314,7 +318,9 @@ int.i <- vint(
   n.trees = best.iter,                 # needed if object is of class "gbm"
   parallel = TRUE
 )
+??autoplot
 ```
+
 
 ```{r}
 # Plot Friedman's H-statistics
@@ -332,7 +338,7 @@ p2 <- ggplot(int.i[1:10, ], aes(reorder(Variables, Interaction), Interaction)) +
   theme(axis.text.x = element_text(angle = 45, vjust = 1)) +
   theme_light() +
   coord_flip()
-
+??vip()
 # Display plots side by side
 grid.arrange(p1, p2, ncol = 2)
 ```

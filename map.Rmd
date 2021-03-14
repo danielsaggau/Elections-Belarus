@@ -1,0 +1,101 @@
+---
+title: "map"
+author: "Daniel Saggau"
+date: "3/14/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##
+
+
+```{r}
+library(readxl)
+library(sf)
+library(ggplot2)
+
+votes <- read.csv("~/Downloads/BelarusElections/belarus1994-qgisNew.csv",header=T)
+geo = st_read("~/Downloads/BelarusElections 4/gis files for BLR and poland/BLR_Adm/BLR_adm2.shp", package="sf")
+dist = st_read("~/Downloads/BelarusElections 4/gis files for BLR and poland/BLR_Adm/BLR_adm1.shp")
+road = st_read("~/Downloads/BelarusElections 4/gis files for BLR and poland/BLR_rds/BLR_roads.shp")
+road = readRDS("~/Downloads/gadm36_BLR_1_sf.rds")
+
+```
+
+```{r}
+install.packages(c("cowplot", "googleway", "ggplot2", "ggrepel", 
+"ggspatial", "libwgeom", "sf", "rnaturalearth", "rnaturalearthdata"))
+```
+
+
+
+```{r}
+data <- read_excel("~/Downloads/df_merge_no.xlsx")
+```
+```{r}
+library(stringr)
+colnames(data)[3:14] = c("total", "received","took_part","part_early","part_residence","part_electionday", "dropped","against_all","invalid","commission","spoiled","unused")
+
+data$region = str_to_title(data$region)
+head(geo)
+head(data)
+
+merge = merge(road, data, by.x= 'NAME_1', by.y='region')
+head(merg$lukashenko_share)
+```
+
+```{r}
+#ggplot(data = merg) +
+#    geom_sf() +
+#    geom_sf(data = merg, fill = NA, color = gray(.5)) 
+```
+
+IAPT <- ggplot() +
+  geom_sf(data = complete_CCG, mapping = aes(geometry = geometry, fill = complete_CCG$MeanWaitEnteredTreatment)) +
+  scale_fill_viridis_c(trans = "sqrt", alpha = .4,
+                       limits=c(0, max(complete_CCG$MeanWaitEnteredTreatment)),
+#                       breaks = seq(from = 0, to = 2000, by = 500),
+                       name ="Waiting time for before entering Treatment") +
+  theme(panel.grid.major = element_line(color = gray(0.5),
+                                        linetype = "dashed",
+                                        size = 0.2), panel.background = element_rect(fill = "white")) +
+  ggtitle("Waiting time for Mental Health Services in England",
+          subtitle = "July 2017, IAPT") +
+  labs(caption = "Source:https://digital.nhs.uk/data-and-information/publications/statistical/psychological-therapies-report-on-the-use-of-iapt-services",
+       x = "longitude", y = "latitude")
+
+```{r}
+
+#sites <- st_as_sf(data, coords = c("longitude", "latitude"), 
+#    crs = 4326, agr = "constant")
+#plot = ggplot(data = merge) + 
+#  geom_sf(data= merge, mapping = aes(geometry = geometry)) +
+#  geom_sf(data = sites, size = 0.1, shape = 23, fill = "darkred")
+
+
+map = ggplot()+ geom_sf(data = merge, mapping = aes(geometry = geometry, fill = lukashenko_share))
+
+ggsave(filename = "map_votes.png",plot = map, width = 20,
+       height = 10, device = "png", dpi = 150)
+
+```
+
+```{r}
+
+lat <- 53.9
+lon <- 27.566667
+name <- "Minsk"
+
+minsk_sf <- st_as_sf(minsk_df, coords = c("lon","lat"), crs = st_crs(4326))
+
+library(skimr)
+summary(merge$lukashenko_share)
+skim(merge)
+
+new = merge(dist, data, by.x = "NAME_1", by.y="region")
+summary(new$geometry)
+```
+
