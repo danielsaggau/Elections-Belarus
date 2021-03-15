@@ -1,49 +1,51 @@
-# Elections-Belarus
-Project for Machine Learning for Economics 
 
-This analysis is devided into numerous sections: 
+This analysis examines the election results in Belarus.
+The primiary focus of this project is to examine the potential of different machine learning methods in Economics. 
+Henceforth, the following analysis looks at way to assist economic reserach without violating standard economic assumptions.
+The focus shifts from traditional prediction tasks to feature selection and data exploration. 
 
-The first section is data pre-processing.
-
-The subsequent section examines different tools for feature selection, specifically lasso and random forest models. 
-Subsequently, we can run a regular OLS regression with the different features.
-
-Thereafter follows a section on topic modeling. 
-For the topic models we create one big word corpus.
-Based on this corpus we can then build our topic models using various sampling methods, also looking at what features matter most.
-
-# Data 
+Our project interlinks code in Python and R, using the best features of each programming language.
+R coding chunks start with %%R in the cell. For replication, please download the datafiles in our datafiles folder. 
 
 
-## Random Forest 
+# Data Analysis in Python 
+
+1. Data Cleaning 
 
 
-# RStudio: Lasso Prediction / Regression, LDA(#TODO) , Mapping (#TODO)
 
-We undertake the Lasso Regression R. 
-Further we again briefly explore the given data and the respective features.
-We use the same data split but different seeds for the R and Python parts.
-
-## Exploratory Data Analysis
-
-* Histogram comparing our dependent variable in overall, test and training data set 
-* Skimr (Histograms, intervals, min, max, summary statistics)
-* Correlation Plots
-
-## Analysis
-
-To evaluate the performance of our lasso model, we compare a lasso specification with a naive model.
-First we compare performance on the training data and subsequently on the test data. 
-As a performance measure we pick the MSE.
-
-### Prediction Training Data 
-
-On the training data our naive regression performs better and gets a lower MSE. 
-
-### Prediction Test Data
-
-On the test data our lasso model outperforms the naive model and gets a lower MSE. 
-
-### OLS Regression (LASSO)
+2. Random Forest for Feature Importance 
 
 
+#  Data Analysis in R
+We undertake the regression models in R. 
+The following sections are structured as follows: 
+
+1.   Lasso Regression versus Naive Regression model
+> *  Splitting the Data
+> *  Correlation Plot
+> * Skimming the Dataset
+> * Naive Regression Model 
+> * Lasso Model 
+> * Cross Validation 
+> * MSE for Prediction on Test and Training Data 
+> * Feature Importance for the Lasso Model 
+2.   Regression model with the selected features for LASSO
+> * Evaluation and Considerations
+3.   Exploration of unsupervised learning methods: Principal Component Analysis 
+> * PCA Analysis 
+> * Screeplot 
+> * Further Considerations future Research 
+4.   Exploration of unsupervised learning methods: Latent Dirichlet Allocation 
+> * Data Cleaning for Text Data 
+> * Topic Model with VEM 
+> * Topic Model with Gibbs Sampling
+> * Considerations and Shortcomings for further research 
+
+5.   Geospatial Analysis of Voting Behaviour 
+> * Share of Votes for Lukashenko 
+> * Looking at previous election year (1994) 
+
+6. Appendix 
+> * Random Forest in R for Feature Importance
+> * Geospatial Map of Total Votes
