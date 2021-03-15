@@ -27,7 +27,10 @@ To reproduce these results, please download the datafiles in the data folder.
 10. Searching for the best parameters
 11. Plotting feature importances
 
-#  Data Analysis in R (ML_Elections_R.ipynb)
+#  Data Analysis in R 
+
+* File: ML_Elections_R.ipynb
+
 We undertake the regression models in R. 
 The following sections are structured as follows: 
 
