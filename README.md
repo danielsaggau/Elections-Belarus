@@ -10,7 +10,7 @@ R coding chunks start with %%R in the cell. For replication, please download the
 
 To reproduce these results, please download the datafiles in the data folder.
 
-# Data Analysis in Python (1-6 file: 'Belarus_elections_data_merge_new.ipynb') (7-11 'RF_regressor_new1.pynb')
+# Data Analysis in Python (1-6 file: 'data_merge.ipynb') (7-11 'RF_reg.ipynb')
 
 1. Data Cleaning 
 2. Joining the tables
@@ -24,7 +24,7 @@ To reproduce these results, please download the datafiles in the data folder.
 10. Searching for the best parameters
 11. Plotting feature importances
 
-#  Data Analysis in R (Belarus ML Ful)
+#  Data Analysis in R (ML_Elections_R.ipynb)
 We undertake the regression models in R. 
 The following sections are structured as follows: 
 
