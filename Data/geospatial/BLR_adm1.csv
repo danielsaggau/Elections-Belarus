@@ -1,0 +1,7 @@
+"OBJECTID","ID_0","ISO","NAME_0","ID_1","NAME_1","TYPE_1","ENGTYPE_1","NL_NAME_1","VARNAME_1"
+1,22,"BLR","Belarus",1,"Brest","Voblasts'","Region",NA,"<U+0411><U+0440><U+0435><U+0441><U+0442>|Brestskaya Voblasts'|Brèst"
+2,22,"BLR","Belarus",2,"Homyel'","Voblasts'","Region",NA,"<U+0413><U+043E><U+043C><U+0435><U+043B><U+044C>|Gomel|Gomel'|Homyel'skaya Voblasts'|Homje"
+3,22,"BLR","Belarus",3,"Hrodna","Voblasts'","Region",NA,"<U+0413><U+0440><U+043E><U+0434><U+043D><U+043E>|Grodno|Hrodzenskaya Voblasts'"
+4,22,"BLR","Belarus",4,"Mahilyow","Voblasts'","Region",NA,"<U+041C><U+043E><U+0433><U+0438><U+043B><U+0451><U+0432>|Mahiljow|Mogilev|Mahilyowskaya Voblasts'"
+5,22,"BLR","Belarus",5,"Minsk","Voblasts'","Region",NA,"<U+041C><U+0438><U+043D><U+0441><U+043A>|<U+041C><U+0438><U+043D><U+0441><U+043A><U+0430><U+044F> <U+041E><U+0431><U+043B><U+0430><U+0441><U+0442><U+044C>|Minsk Oblast|Minskaya Voblasts'"
+6,22,"BLR","Belarus",6,"Vitsyebsk","Voblasts'","Region",NA,"<U+0412><U+0438><U+0442><U+0435><U+0431><U+0441><U+043A>|Vicebsk|Vitebsk|Vitsyebskaya Voblasts'|Witebsk"
