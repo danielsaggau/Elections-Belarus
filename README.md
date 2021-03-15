@@ -12,11 +12,16 @@ R coding chunks start with %%R in the cell. For replication, please download the
 # Data Analysis in Python 
 
 1. Data Cleaning 
-
-
-
-2. Random Forest for Feature Importance 
-
+2. Joining the tables
+3. Creating strings with occupations of all the members of the commission
+4. Creating dummies for the commission ids according to occupations that the members of commission have
+5. Merging commission features with the main data set
+6. Translating to English names of the columns
+7. Creating dummies for region
+8. Creating the Lukashenko share of votes variable
+9. Selecting hyperparameters that we want to check in RandomizedSearchCV
+10. Searching for the best parameters
+11. Plotting feature importances
 
 #  Data Analysis in R
 We undertake the regression models in R. 
