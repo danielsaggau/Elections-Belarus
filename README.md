@@ -8,8 +8,9 @@ The focus shifts from traditional prediction tasks to feature selection and data
 Our project interlinks code in Python and R, using the best features of each programming language.
 R coding chunks start with %%R in the cell. For replication, please download the datafiles in our datafiles folder. 
 
+To reproduce these results, please download the datafiles in the data folder.
 
-# Data Analysis in Python 
+# Data Analysis in Python (1-6 file: 'Belarus_elections_data_merge_new.ipynb') (7-11 'RF_regressor_new1.pynb')
 
 1. Data Cleaning 
 2. Joining the tables
@@ -23,7 +24,7 @@ R coding chunks start with %%R in the cell. For replication, please download the
 10. Searching for the best parameters
 11. Plotting feature importances
 
-#  Data Analysis in R
+#  Data Analysis in R (Belarus ML Ful)
 We undertake the regression models in R. 
 The following sections are structured as follows: 
 
