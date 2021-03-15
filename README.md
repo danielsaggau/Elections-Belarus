@@ -1,3 +1,4 @@
+# An Empirical Investigation of Election Results in Belarus 
 
 This analysis examines the election results in Belarus.
 The primiary focus of this project is to examine the potential of different machine learning methods in Economics. 
