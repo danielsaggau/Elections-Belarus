@@ -12,7 +12,7 @@ To reproduce these results, please download the datafiles in the data folder.
 
 # Data Analysis in Python
 
-* 1-6 file: 'data_merge.ipynb' 
+* 1-6 'data_merge.ipynb' 
 * 7-11 'RF_reg.ipynb'
 
 1. Data Cleaning 
